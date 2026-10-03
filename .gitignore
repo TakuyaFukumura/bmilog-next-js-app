@@ -40,8 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# database
-/data/
+# data
+/data/*
+!/data/weight-sample.csv
+!/data/profile-sample.csv
 *.db
 *.sqlite
 

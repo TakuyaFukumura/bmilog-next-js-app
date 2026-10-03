@@ -5,8 +5,8 @@ import Header from "./components/Header";
 import React from "react";
 
 export const metadata: Metadata = {
-    title: "基本Next.jsアプリ",
-    description: "SQLiteからメッセージを取得するシンプルなNext.jsアプリケーション",
+    title: "体重とBMIの記録",
+    description: "体重の推移とBMIを可視化するパーソナルダッシュボード",
 };
 
 export default function RootLayout({

@@ -44,7 +44,7 @@ describe('Header', () => {
         it('ヘッダータイトルが表示される', () => {
             renderWithProvider();
 
-            expect(screen.getByText('bmilog-next-js-app')).toBeInTheDocument();
+            expect(screen.getByText('BMI・体重ログ')).toBeInTheDocument();
         });
 
         it('ヘッダーのHTML構造が正しい', () => {
