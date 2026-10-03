@@ -1,6 +1,6 @@
 {
-  "name": "basic-next-js-app",
-  "version": "0.3.7",
+  "name": "bmilog-next-js-app",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
