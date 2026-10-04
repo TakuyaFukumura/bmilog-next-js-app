@@ -7,12 +7,18 @@ jest.mock('recharts', () => {
     const {cloneElement} = jest.requireActual<typeof import('react')>('react');
     return {
         CartesianGrid: () => null,
-        Line: ({data, dot}: {
+        Line: ({activeDot, data, dot}: {
             data?: { date: string; weightKg: number; bmi: number; bmiCategory: string }[];
+            activeDot?: (props: { payload: unknown; cx: number; cy: number }) => import('react').ReactNode;
             dot?: ((props: { payload: unknown; cx: number; cy: number }) => import('react').ReactNode)
                 | import('react').ReactElement<{ payload?: unknown; cx?: number; cy?: number }>;
         }) => (
             <svg>
+                {data?.[0] && activeDot && (
+                    <g data-testid="active-chart-point">
+                        {activeDot({payload: data[0], cx: 10, cy: 10})}
+                    </g>
+                )}
                 {data?.map(record => {
                     const point = {payload: record, cx: 10, cy: 10};
                     const renderedDot = typeof dot === 'function'
@@ -132,6 +138,18 @@ describe('WeightDashboard', () => {
         expect(screen.getByText('25.1', {selector: 'p'})).toBeInTheDocument();
     });
 
+    it('ホバー中のグラフ点をクリックしても記録を選択できる', () => {
+        render(<WeightDashboard data={dashboardData} today="2026-10-04"/>);
+
+        fireEvent.click(within(screen.getByTestId('active-chart-point'))
+            .getByRole('button', {name: /2026-08-31/}));
+
+        const detail = screen.getByText('選択中の記録').parentElement;
+        expect(detail).not.toBeNull();
+        expect(within(detail as HTMLElement).getByText('2026-08-31')).toBeInTheDocument();
+        expect(within(detail as HTMLElement).getByText('75.0 kg')).toBeInTheDocument();
+    });
+
     it('無効な身長では更新しない', () => {
         render(<WeightDashboard data={dashboardData} today="2026-10-04"/>);
 
@@ -195,7 +213,8 @@ describe('WeightDashboard', () => {
         render(<WeightDashboard data={data} today="2026-10-04"/>);
 
         const chartPoints = screen.getAllByRole('button')
-            .filter(element => element.tagName.toLowerCase() === 'circle');
+            .filter(element => element.tagName.toLowerCase() === 'circle' &&
+                element.getAttribute('r') === '5');
         expect(chartPoints).toHaveLength(1000);
         expect(chartPoints.filter(element => element.getAttribute('tabindex') === '0')).toHaveLength(1);
         expect(chartPoints.filter(element => element.getAttribute('tabindex') === '-1')).toHaveLength(999);

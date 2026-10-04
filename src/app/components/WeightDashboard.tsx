@@ -76,6 +76,7 @@ function WeightChartDot({
     payload,
     cx,
     cy,
+    r = 5,
     selectedDate,
     visibleRecords,
     setSelectedDate,
@@ -90,7 +91,7 @@ function WeightChartDot({
         <circle
             cx={cx}
             cy={cy}
-            r={5}
+            r={r}
             fill="var(--chart-series)"
             stroke="var(--chart-point-outline)"
             strokeWidth={2}
@@ -378,7 +379,18 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                 name="体重"
                                 stroke="var(--chart-series)"
                                 strokeWidth={3}
-                                activeDot={{r: 8}}
+                                activeDot={props => (
+                                    <WeightChartDot
+                                        payload={props.payload}
+                                        cx={props.cx}
+                                        cy={props.cy}
+                                        r={8}
+                                        selectedDate={selectedRecord?.date ?? null}
+                                        visibleRecords={visibleRecords}
+                                        setSelectedDate={setSelectedDate}
+                                        chartPointRefs={chartPointRefs}
+                                    />
+                                )}
                                 dot={<WeightChartDot
                                     selectedDate={selectedRecord?.date ?? null}
                                     visibleRecords={visibleRecords}
