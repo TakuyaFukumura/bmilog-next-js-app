@@ -1,6 +1,7 @@
 'use client';
 
 import {useMemo, useRef, useState} from 'react';
+import type {Dispatch, SetStateAction} from 'react';
 import {
     CartesianGrid,
     Line,
@@ -16,10 +17,10 @@ import type {BmiRecord, Period} from '../../lib/metrics';
 import {filterRecordsByPeriod, formatOneDecimal, getBmiRecords, getStandardWeightRange,} from '../../lib/metrics';
 import type {DashboardDataResult} from '../../lib/health-data';
 
-type WeightDashboardProps = {
+type WeightDashboardProps = Readonly<{
     data: DashboardDataResult;
     today: string;
-};
+}>;
 
 const periodOptions: { value: Period; label: string }[] = [
     {value: 'all', label: '全期間'},
@@ -27,6 +28,14 @@ const periodOptions: { value: Period; label: string }[] = [
     {value: '3m', label: '3か月'},
     {value: '6m', label: '6か月'},
 ];
+
+type WeightChartDotProps = Readonly<{
+    point: { payload: unknown; cx?: number; cy?: number };
+    selectedDate: string | null;
+    visibleRecords: BmiRecord[];
+    chartPointRefs: Map<string, SVGCircleElement>;
+    setSelectedDate: Dispatch<SetStateAction<string | null>>;
+}>;
 
 function isBmiRecord(value: unknown): value is BmiRecord {
     if (typeof value !== 'object' || value === null) {
@@ -44,7 +53,76 @@ function dateLabel(date: string): string {
     return `${Number(month)}/${Number(day)}`;
 }
 
-function DataError({data}: { data: Exclude<DashboardDataResult, { status: 'ok' }> }) {
+function tooltipDateLabel(label: unknown): string {
+    if (typeof label === 'string' || typeof label === 'number') {
+        return `日付: ${label}`;
+    }
+    return '日付: —';
+}
+
+function formatWeightDifference(difference: number | null): string {
+    if (difference === null) {
+        return '—';
+    }
+    const formattedDifference = formatOneDecimal(difference);
+    return difference > 0 ? `+${formattedDifference} kg` : `${formattedDifference} kg`;
+}
+
+function WeightChartDot({
+    point,
+    selectedDate,
+    visibleRecords,
+    chartPointRefs,
+    setSelectedDate,
+}: WeightChartDotProps) {
+    const record = isBmiRecord(point.payload) ? point.payload : null;
+    if (!record || typeof point.cx !== 'number' || typeof point.cy !== 'number') {
+        return null;
+    }
+
+    return (
+        <circle
+            cx={point.cx}
+            cy={point.cy}
+            r={5}
+            fill="var(--chart-series)"
+            stroke="var(--chart-point-outline)"
+            strokeWidth={2}
+            role="button"
+            tabIndex={selectedDate === record.date ? 0 : -1}
+            aria-label={`${record.date} ${formatOneDecimal(record.weightKg)} kg、BMI ${formatOneDecimal(record.bmi)}`}
+            ref={element => {
+                if (element) {
+                    chartPointRefs.set(record.date, element);
+                } else {
+                    chartPointRefs.delete(record.date);
+                }
+            }}
+            onClick={() => setSelectedDate(record.date)}
+            onKeyDown={event => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    setSelectedDate(record.date);
+                    return;
+                }
+                if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                    event.preventDefault();
+                    const direction = event.key === 'ArrowLeft' ? -1 : 1;
+                    const currentIndex = visibleRecords.findIndex(
+                        item => item.date === record.date,
+                    );
+                    const nextRecord = visibleRecords[currentIndex + direction];
+                    if (nextRecord) {
+                        setSelectedDate(nextRecord.date);
+                        chartPointRefs.get(nextRecord.date)?.focus();
+                    }
+                }
+            }}
+        />
+    );
+}
+
+function DataError({data}: Readonly<{ data: Exclude<DashboardDataResult, { status: 'ok' }> }>) {
     if (data.status === 'unreadable') {
         return (
             <section
@@ -97,6 +175,7 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
         visibleRecords.at(-1) ?? null;
     const latestRecord = allRecords.at(-1) ?? null;
     const difference = latestRecord ? latestRecord.weightKg - data.profile.targetWeightKg : null;
+    const differenceLabel = formatWeightDifference(difference);
     const standardRange = getStandardWeightRange(data.profile.heightCm);
     const weights = [
         ...visibleRecords.map(record => record.weightKg),
@@ -166,7 +245,7 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                     className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <h2 className="text-sm font-medium text-gray-600 dark:text-gray-300">目標体重との差</h2>
                     <p className="mt-2 text-2xl font-bold">
-                        {difference === null ? '—' : `${difference > 0 ? '+' : ''}${formatOneDecimal(difference)} kg`}
+                        {differenceLabel}
                     </p>
                     <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">目標 {formatOneDecimal(data.profile.targetWeightKg)} kg</p>
                 </article>
@@ -214,7 +293,7 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                             />
                             <Tooltip
                                 formatter={(value, name) => [typeof value === 'number' ? `${formatOneDecimal(value)} kg` : value, name]}
-                                labelFormatter={label => `日付: ${label}`}
+                                labelFormatter={tooltipDateLabel}
                             />
                             {visibleRecords.length > 0 && (
                                 <ReferenceArea
@@ -259,52 +338,15 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                 stroke="var(--chart-series)"
                                 strokeWidth={3}
                                 activeDot={{r: 8}}
-                                dot={(props) => {
-                                    const record = isBmiRecord(props.payload) ? props.payload : null;
-                                    if (!record || typeof props.cx !== 'number' || typeof props.cy !== 'number') {
-                                        return null;
-                                    }
-                                    return (
-                                        <circle
-                                            cx={props.cx}
-                                            cy={props.cy}
-                                            r={5}
-                                            fill="var(--chart-series)"
-                                            stroke="var(--chart-point-outline)"
-                                            strokeWidth={2}
-                                            role="button"
-                                            tabIndex={selectedRecord?.date === record.date ? 0 : -1}
-                                            aria-label={`${record.date} ${formatOneDecimal(record.weightKg)} kg、BMI ${formatOneDecimal(record.bmi)}`}
-                                            ref={element => {
-                                                if (element) {
-                                                    chartPointRefs.current.set(record.date, element);
-                                                } else {
-                                                    chartPointRefs.current.delete(record.date);
-                                                }
-                                            }}
-                                            onClick={() => setSelectedDate(record.date)}
-                                            onKeyDown={event => {
-                                                if (event.key === 'Enter' || event.key === ' ') {
-                                                    event.preventDefault();
-                                                    setSelectedDate(record.date);
-                                                    return;
-                                                }
-                                                if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
-                                                    event.preventDefault();
-                                                    const direction = event.key === 'ArrowLeft' ? -1 : 1;
-                                                    const currentIndex = visibleRecords.findIndex(
-                                                        item => item.date === record.date,
-                                                    );
-                                                    const nextRecord = visibleRecords[currentIndex + direction];
-                                                    if (nextRecord) {
-                                                        setSelectedDate(nextRecord.date);
-                                                        chartPointRefs.current.get(nextRecord.date)?.focus();
-                                                    }
-                                                }
-                                            }}
-                                        />
-                                    );
-                                }}
+                                dot={point => (
+                                    <WeightChartDot
+                                        point={point}
+                                        selectedDate={selectedRecord?.date ?? null}
+                                        visibleRecords={visibleRecords}
+                                        chartPointRefs={chartPointRefs.current}
+                                        setSelectedDate={setSelectedDate}
+                                    />
+                                )}
                             />
                         </LineChart>
                     </ResponsiveContainer>
