@@ -4,16 +4,22 @@ import type {DashboardDataResult} from '../../../../src/lib/health-data';
 
 jest.mock('recharts', () => {
     const passthrough = ({children}: { children?: import('react').ReactNode }) => <div>{children}</div>;
+    const {cloneElement} = jest.requireActual<typeof import('react')>('react');
     return {
         CartesianGrid: () => null,
         Line: ({data, dot}: {
             data?: { date: string; weightKg: number; bmi: number; bmiCategory: string }[];
-            dot?: (props: { payload: unknown; cx: number; cy: number }) => import('react').ReactNode;
+            dot?: ((props: { payload: unknown; cx: number; cy: number }) => import('react').ReactNode)
+                | import('react').ReactElement<{ payload?: unknown; cx?: number; cy?: number }>;
         }) => (
             <svg>
-                {data?.map(record => (
-                    <g key={record.date}>{dot?.({payload: record, cx: 10, cy: 10})}</g>
-                ))}
+                {data?.map(record => {
+                    const point = {payload: record, cx: 10, cy: 10};
+                    const renderedDot = typeof dot === 'function'
+                        ? dot(point)
+                        : dot ? cloneElement(dot, point) : null;
+                    return <g key={record.date}>{renderedDot}</g>;
+                })}
             </svg>
         ),
         LineChart: passthrough,
