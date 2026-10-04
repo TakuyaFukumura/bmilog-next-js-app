@@ -13,12 +13,7 @@ import {
     YAxis,
 } from 'recharts';
 import type {BmiRecord, Period} from '../../lib/metrics';
-import {
-    filterRecordsByPeriod,
-    formatOneDecimal,
-    getBmiRecords,
-    getStandardWeightRange,
-} from '../../lib/metrics';
+import {filterRecordsByPeriod, formatOneDecimal, getBmiRecords, getStandardWeightRange,} from '../../lib/metrics';
 import type {DashboardDataResult} from '../../lib/health-data';
 
 type WeightDashboardProps = {
@@ -26,7 +21,7 @@ type WeightDashboardProps = {
     today: string;
 };
 
-const periodOptions: {value: Period; label: string}[] = [
+const periodOptions: { value: Period; label: string }[] = [
     {value: 'all', label: '全期間'},
     {value: '1m', label: '1か月'},
     {value: '3m', label: '3か月'},
@@ -49,11 +44,12 @@ function dateLabel(date: string): string {
     return `${Number(month)}/${Number(day)}`;
 }
 
-function DataError({data}: {data: Exclude<DashboardDataResult, {status: 'ok'}>}) {
+function DataError({data}: { data: Exclude<DashboardDataResult, { status: 'ok' }> }) {
     if (data.status === 'unreadable') {
         return (
-            <section className="rounded-2xl border border-red-300 bg-red-50 p-6 text-red-950 dark:border-red-800 dark:bg-red-950/40 dark:text-red-100"
-                     role="alert">
+            <section
+                className="rounded-2xl border border-red-300 bg-red-50 p-6 text-red-950 dark:border-red-800 dark:bg-red-950/40 dark:text-red-100"
+                role="alert">
                 <h2 className="text-lg font-semibold">データを読み込めません</h2>
                 <p className="mt-2">次のCSVファイルを確認してください。</p>
                 <ul className="mt-2 list-inside list-disc">
@@ -64,8 +60,9 @@ function DataError({data}: {data: Exclude<DashboardDataResult, {status: 'ok'}>})
     }
 
     return (
-        <section className="rounded-2xl border border-red-300 bg-red-50 p-6 text-red-950 dark:border-red-800 dark:bg-red-950/40 dark:text-red-100"
-                 role="alert">
+        <section
+            className="rounded-2xl border border-red-300 bg-red-50 p-6 text-red-950 dark:border-red-800 dark:bg-red-950/40 dark:text-red-100"
+            role="alert">
             <h2 className="text-lg font-semibold">CSVに不正なデータがあります</h2>
             <p className="mt-2">問題を修正してからページを再読み込みしてください。データの一部だけを表示することはありません。</p>
             <ul className="mt-4 space-y-2">
@@ -136,22 +133,26 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
     return (
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <div className="mb-8">
-                <p className="text-sm font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">Health overview</p>
+                <p className="text-sm font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">Health
+                    overview</p>
                 <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">体重とBMIの記録</h1>
                 <p className="mt-2 text-gray-600 dark:text-gray-300">CSVに記録した体重の変化を確認できます。</p>
             </div>
 
             <section aria-label="最新の記録" className="mb-8 grid gap-4 sm:grid-cols-3">
-                <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <article
+                    className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <h2 className="text-sm font-medium text-gray-600 dark:text-gray-300">最新記録</h2>
                     {latestRecord ? (
                         <>
-                            <p className="mt-2 text-2xl font-bold">{formatOneDecimal(latestRecord.weightKg)} <span className="text-base font-medium">kg</span></p>
+                            <p className="mt-2 text-2xl font-bold">{formatOneDecimal(latestRecord.weightKg)} <span
+                                className="text-base font-medium">kg</span></p>
                             <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{latestRecord.date}</p>
                         </>
                     ) : <p className="mt-2 text-lg font-semibold">記録がありません</p>}
                 </article>
-                <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <article
+                    className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <h2 className="text-sm font-medium text-gray-600 dark:text-gray-300">最新のBMI</h2>
                     {latestRecord ? (
                         <>
@@ -160,7 +161,8 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                         </>
                     ) : <p className="mt-2 text-lg font-semibold">—</p>}
                 </article>
-                <article className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <article
+                    className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
                     <h2 className="text-sm font-medium text-gray-600 dark:text-gray-300">目標体重との差</h2>
                     <p className="mt-2 text-2xl font-bold">
                         {difference === null ? '—' : `${difference > 0 ? '+' : ''}${formatOneDecimal(difference)} kg`}
@@ -169,7 +171,8 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                 </article>
             </section>
 
-            <section className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-6">
+            <section
+                className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 sm:p-6">
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h2 className="text-xl font-semibold">体重の推移</h2>
@@ -198,7 +201,8 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                             onClick={selectChartPoint}
                         >
                             <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)"/>
-                            <XAxis dataKey="date" tickFormatter={dateLabel} minTickGap={24} tick={{fill: 'var(--chart-text)', fontSize: 12}}/>
+                            <XAxis dataKey="date" tickFormatter={dateLabel} minTickGap={24}
+                                   tick={{fill: 'var(--chart-text)', fontSize: 12}}/>
                             <YAxis
                                 domain={[minWeight, maxWeight]}
                                 tick={{fill: 'var(--chart-text)', fontSize: 12}}
@@ -237,7 +241,12 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                 y={data.profile.targetWeightKg}
                                 stroke="var(--chart-target)"
                                 strokeDasharray="6 4"
-                                label={{value: '目標体重', fill: 'var(--chart-target)', fontSize: 12, position: 'insideTopRight'}}
+                                label={{
+                                    value: '目標体重',
+                                    fill: 'var(--chart-target)',
+                                    fontSize: 12,
+                                    position: 'insideTopRight'
+                                }}
                             />
                             <Line
                                 type="monotone"
@@ -282,15 +291,25 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                     <h3 className="font-semibold">選択中の記録</h3>
                     {selectedRecord ? (
                         <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-3">
-                            <div><dt className="text-gray-600 dark:text-gray-300">日付</dt><dd className="font-medium">{selectedRecord.date}</dd></div>
-                            <div><dt className="text-gray-600 dark:text-gray-300">体重</dt><dd className="font-medium">{formatOneDecimal(selectedRecord.weightKg)} kg</dd></div>
-                            <div><dt className="text-gray-600 dark:text-gray-300">BMI</dt><dd className="font-medium">{formatOneDecimal(selectedRecord.bmi)}（{selectedRecord.bmiCategory}）</dd></div>
+                            <div>
+                                <dt className="text-gray-600 dark:text-gray-300">日付</dt>
+                                <dd className="font-medium">{selectedRecord.date}</dd>
+                            </div>
+                            <div>
+                                <dt className="text-gray-600 dark:text-gray-300">体重</dt>
+                                <dd className="font-medium">{formatOneDecimal(selectedRecord.weightKg)} kg</dd>
+                            </div>
+                            <div>
+                                <dt className="text-gray-600 dark:text-gray-300">BMI</dt>
+                                <dd className="font-medium">{formatOneDecimal(selectedRecord.bmi)}（{selectedRecord.bmiCategory}）</dd>
+                            </div>
                         </dl>
                     ) : <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">記録がありません</p>}
                 </div>
 
                 <details className="mt-6 rounded-xl border border-gray-200 dark:border-gray-700">
-                    <summary className="cursor-pointer px-4 py-3 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">
+                    <summary
+                        className="cursor-pointer px-4 py-3 font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700">
                         表示中の記録を表で確認（{visibleRecords.length}件）
                     </summary>
                     <div className="overflow-x-auto px-4 pb-4">
@@ -310,9 +329,12 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                     </thead>
                                     <tbody>
                                     {tableRecords.map(record => (
-                                        <tr key={record.date} className={`border-b border-gray-100 dark:border-gray-700 ${selectedRecord?.date === record.date ? 'bg-teal-50 dark:bg-teal-950/40' : ''}`}>
+                                        <tr key={record.date}
+                                            className={`border-b border-gray-100 dark:border-gray-700 ${selectedRecord?.date === record.date ? 'bg-teal-50 dark:bg-teal-950/40' : ''}`}>
                                             <td className="py-2 pr-4">
-                                                <button type="button" className="text-teal-800 underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-teal-300" onClick={() => setSelectedDate(record.date)}>
+                                                <button type="button"
+                                                        className="text-teal-800 underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 dark:text-teal-300"
+                                                        onClick={() => setSelectedDate(record.date)}>
                                                     {record.date}
                                                 </button>
                                             </td>
@@ -333,7 +355,8 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                         >
                                             前へ
                                         </button>
-                                        <span className="text-sm" aria-live="polite">{currentTablePage + 1} / {pageCount}ページ</span>
+                                        <span className="text-sm"
+                                              aria-live="polite">{currentTablePage + 1} / {pageCount}ページ</span>
                                         <button
                                             type="button"
                                             disabled={currentTablePage >= pageCount - 1}

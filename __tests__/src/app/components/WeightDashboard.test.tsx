@@ -3,12 +3,12 @@ import WeightDashboard from '../../../../src/app/components/WeightDashboard';
 import type {DashboardDataResult} from '../../../../src/lib/health-data';
 
 jest.mock('recharts', () => {
-    const passthrough = ({children}: {children?: import('react').ReactNode}) => <div>{children}</div>;
+    const passthrough = ({children}: { children?: import('react').ReactNode }) => <div>{children}</div>;
     return {
         CartesianGrid: () => null,
         Line: ({data, dot}: {
-            data?: {date: string; weightKg: number; bmi: number; bmiCategory: string}[];
-            dot?: (props: {payload: unknown; cx: number; cy: number}) => import('react').ReactNode;
+            data?: { date: string; weightKg: number; bmi: number; bmiCategory: string }[];
+            dot?: (props: { payload: unknown; cx: number; cy: number }) => import('react').ReactNode;
         }) => (
             <svg>
                 {data?.map(record => (
@@ -127,7 +127,8 @@ describe('WeightDashboard', () => {
         const {rerender} = render(<WeightDashboard data={emptyData} today="2026-10-04"/>);
         expect(screen.getAllByText('記録がありません').length).toBeGreaterThan(0);
 
-        rerender(<WeightDashboard data={{status: 'unreadable', files: ['data/profile-sample.csv']}} today="2026-10-04"/>);
+        rerender(<WeightDashboard data={{status: 'unreadable', files: ['data/profile-sample.csv']}}
+                                  today="2026-10-04"/>);
         expect(screen.getByRole('alert')).toHaveTextContent('データを読み込めません');
         expect(screen.getByRole('alert')).toHaveTextContent('data/profile-sample.csv');
     });

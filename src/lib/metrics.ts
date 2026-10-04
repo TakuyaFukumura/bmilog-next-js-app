@@ -38,7 +38,7 @@ export function getPeriodStart(today: string, months: number): string {
     ].join('-');
 }
 
-export function filterRecordsByPeriod<T extends {date: string}>(
+export function filterRecordsByPeriod<T extends { date: string }>(
     records: T[],
     period: Period,
     today: string,
@@ -51,7 +51,7 @@ export function filterRecordsByPeriod<T extends {date: string}>(
     return records.filter(record => record.date >= start && record.date <= today);
 }
 
-export function getStandardWeightRange(heightCm: number): {lower: number; upper: number} {
+export function getStandardWeightRange(heightCm: number): { lower: number; upper: number } {
     const heightM = heightCm / 100;
     return {
         lower: 18.5 * heightM * heightM,
