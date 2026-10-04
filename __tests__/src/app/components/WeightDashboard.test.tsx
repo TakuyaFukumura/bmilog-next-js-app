@@ -75,7 +75,7 @@ describe('WeightDashboard', () => {
         expect(screen.queryByText('CSVに記録した体重の変化を確認できます。')).not.toBeInTheDocument();
         expect(screen.getByText('73.5', {selector: 'p'})).toBeInTheDocument();
         expect(screen.getByLabelText('身長 (cm)')).toHaveValue(171);
-        expect(screen.getByText('+9.5 kg')).toBeInTheDocument();
+        expect(screen.getByText('+9.5 kg', {selector: 'p'})).toBeInTheDocument();
         expect(screen.getByText(/目標 64\.0 kg/)).toBeInTheDocument();
         expect(screen.getAllByText('2026-10-04').length).toBeGreaterThan(0);
         expect(screen.getByTestId('tooltip-label')).toHaveTextContent('日付: 2026-10-04');
@@ -94,6 +94,7 @@ describe('WeightDashboard', () => {
         expect(detail).not.toBeNull();
         expect(within(detail as HTMLElement).getByText('2026-09-22')).toBeInTheDocument();
         expect(within(detail as HTMLElement).getByText('74.4 kg')).toBeInTheDocument();
+        expect(within(detail as HTMLElement).getByText('+10.4 kg')).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', {name: '全期間'}));
         const chartPoint = screen.getAllByRole('button', {name: /2026-08-31/})
@@ -103,6 +104,7 @@ describe('WeightDashboard', () => {
         }
         fireEvent.click(chartPoint);
         expect(within(detail as HTMLElement).getByText('2026-08-31')).toBeInTheDocument();
+        expect(within(detail as HTMLElement).getByText('+11.0 kg')).toBeInTheDocument();
 
         const keyboardPoint = screen.getAllByRole('button', {name: /2026-09-22/})
             .find(element => element.tagName.toLowerCase() === 'circle');
@@ -168,7 +170,7 @@ describe('WeightDashboard', () => {
         };
         render(<WeightDashboard data={belowTarget} today="2026-10-04"/>);
 
-        expect(screen.getByText('-3.0 kg')).toBeInTheDocument();
+        expect(screen.getByText('-3.0 kg', {selector: 'p'})).toBeInTheDocument();
     });
 
     it('CSV検証エラーは行番号と理由を表示する', () => {

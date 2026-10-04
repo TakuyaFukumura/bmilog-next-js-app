@@ -405,7 +405,7 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                 <div className="mt-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-900/60" aria-live="polite">
                     <h3 className="font-semibold">選択中の記録</h3>
                     {selectedRecord ? (
-                        <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-3">
+                        <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-4">
                             <div>
                                 <dt className="text-gray-600 dark:text-gray-300">日付</dt>
                                 <dd className="font-medium">{selectedRecord.date}</dd>
@@ -417,6 +417,12 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                             <div>
                                 <dt className="text-gray-600 dark:text-gray-300">BMI</dt>
                                 <dd className="font-medium">{formatOneDecimal(selectedRecord.bmi)}（{selectedRecord.bmiCategory}）</dd>
+                            </div>
+                            <div>
+                                <dt className="text-gray-600 dark:text-gray-300">目標体重との差</dt>
+                                <dd className="font-medium">
+                                    {formatWeightDifference(selectedRecord.weightKg - data.profile.targetWeightKg)}
+                                </dd>
                             </div>
                         </dl>
                     ) : <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">記録がありません</p>}
