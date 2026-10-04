@@ -41,7 +41,7 @@ jest.mock('recharts', () => {
 
 const dashboardData: DashboardDataResult = {
     status: 'ok',
-    profile: {heightCm: 170, targetWeightKg: 68},
+    profile: {heightCm: 171, targetWeightKg: 68},
     records: [
         {date: '2026-08-31', weightKg: 75},
         {date: '2026-09-22', weightKg: 74.4},
@@ -56,7 +56,7 @@ describe('WeightDashboard', () => {
         expect(screen.queryByText(/Health overview/)).not.toBeInTheDocument();
         expect(screen.queryByText('CSVに記録した体重の変化を確認できます。')).not.toBeInTheDocument();
         expect(screen.getByText('73.5', {selector: 'p'})).toBeInTheDocument();
-        expect(screen.getByText('身長 170 cm')).toBeInTheDocument();
+        expect(screen.getByText('身長 171 cm')).toBeInTheDocument();
         expect(screen.getByText('+5.5 kg')).toBeInTheDocument();
         expect(screen.getAllByText('2026-10-04').length).toBeGreaterThan(0);
         expect(screen.getByTestId('tooltip-label')).toHaveTextContent('日付: 2026-10-04');
