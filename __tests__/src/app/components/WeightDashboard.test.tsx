@@ -100,7 +100,7 @@ describe('WeightDashboard', () => {
         expect(screen.getAllByText('2026-10-04').length).toBeGreaterThan(0);
         expect(screen.getByTestId('tooltip-label')).toHaveTextContent('日付: 2026-10-04');
         expect(screen.getByTestId('tooltip-label')).toHaveTextContent('日付: —');
-        expect(screen.getByTestId('tooltip-value')).toHaveTextContent('73.5 kg（目標体重との差 +9.5 kg）');
+        expect(screen.getByTestId('tooltip-value')).toHaveTextContent('73.5 kg（+9.5 kg）');
         expect(screen.getByTestId('tooltip-label')).toHaveAttribute('data-background-color', 'var(--chart-tooltip-background)');
         expect(screen.getByTestId('tooltip-label')).toHaveAttribute('data-border-color', 'var(--chart-tooltip-border)');
         expect(screen.getByTestId('tooltip-label')).toHaveAttribute('data-text-color', 'var(--chart-tooltip-text)');

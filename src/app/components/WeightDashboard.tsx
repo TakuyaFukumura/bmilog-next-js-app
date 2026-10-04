@@ -348,7 +348,7 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                         record.weightKg - data.profile.targetWeightKg,
                                     );
                                     return [
-                                        `${formattedValue}（目標体重との差 ${targetDifference}）`,
+                                        `${formattedValue}（${targetDifference}）`,
                                         name,
                                     ];
                                 }}
