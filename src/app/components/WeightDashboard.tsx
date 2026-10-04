@@ -336,7 +336,22 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                     borderColor: 'var(--chart-tooltip-border)',
                                     color: 'var(--chart-tooltip-text)',
                                 }}
-                                formatter={(value, name) => [typeof value === 'number' ? `${formatOneDecimal(value)} kg` : value, name]}
+                                formatter={(value, name, item) => {
+                                    const formattedValue = typeof value === 'number'
+                                        ? `${formatOneDecimal(value)} kg`
+                                        : value;
+                                    const record = isBmiRecord(item.payload) ? item.payload : null;
+                                    if (!record) {
+                                        return [formattedValue, name];
+                                    }
+                                    const targetDifference = formatWeightDifference(
+                                        record.weightKg - data.profile.targetWeightKg,
+                                    );
+                                    return [
+                                        `${formattedValue}（目標体重との差 ${targetDifference}）`,
+                                        name,
+                                    ];
+                                }}
                                 itemStyle={{color: 'var(--chart-tooltip-text)'}}
                                 labelFormatter={tooltipDateLabel}
                                 labelStyle={{color: 'var(--chart-tooltip-text)'}}

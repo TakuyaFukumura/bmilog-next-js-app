@@ -32,26 +32,46 @@ jest.mock('recharts', () => {
         ReferenceArea: () => null,
         ReferenceLine: () => null,
         ResponsiveContainer: passthrough,
-        Tooltip: ({contentStyle, itemStyle, labelFormatter, labelStyle}: {
+        Tooltip: ({contentStyle, formatter, itemStyle, labelFormatter, labelStyle}: {
             contentStyle?: import('react').CSSProperties;
+            formatter?: (
+                value: number,
+                name: string,
+                item: { payload: unknown },
+                index: number,
+            ) => import('react').ReactNode | [import('react').ReactNode, import('react').ReactNode];
             itemStyle?: import('react').CSSProperties;
             labelFormatter?: (label: import('react').ReactNode) => import('react').ReactNode;
             labelStyle?: import('react').CSSProperties;
-        }) => (
-            <div
-                data-testid="tooltip-label"
-                data-background-color={contentStyle?.backgroundColor}
-                data-border-color={contentStyle?.borderColor}
-                data-text-color={contentStyle?.color}
-            >
-                <span data-testid="tooltip-date" data-text-color={labelStyle?.color}>
-                    {labelFormatter?.('2026-10-04')}
-                </span>
-                <span data-text-color={itemStyle?.color}>
-                    {labelFormatter?.(<span>未対応のラベル形式</span>)}
-                </span>
-            </div>
-        ),
+        }) => {
+            const formatted = formatter?.(73.5, '体重', {
+                payload: {
+                    date: '2026-10-04',
+                    weightKg: 73.5,
+                    bmi: 25.1,
+                    bmiCategory: '高BMI',
+                },
+            }, 0);
+            const formattedValue = Array.isArray(formatted) ? formatted[0] : formatted;
+            return (
+                <div
+                    data-testid="tooltip-label"
+                    data-background-color={contentStyle?.backgroundColor}
+                    data-border-color={contentStyle?.borderColor}
+                    data-text-color={contentStyle?.color}
+                >
+                    <span data-testid="tooltip-date" data-text-color={labelStyle?.color}>
+                        {labelFormatter?.('2026-10-04')}
+                    </span>
+                    <span data-testid="tooltip-value" data-text-color={itemStyle?.color}>
+                        {formattedValue}
+                    </span>
+                    <span data-text-color={itemStyle?.color}>
+                        {labelFormatter?.(<span>未対応のラベル形式</span>)}
+                    </span>
+                </div>
+            );
+        },
         XAxis: () => null,
         YAxis: () => null,
     };
@@ -80,6 +100,7 @@ describe('WeightDashboard', () => {
         expect(screen.getAllByText('2026-10-04').length).toBeGreaterThan(0);
         expect(screen.getByTestId('tooltip-label')).toHaveTextContent('日付: 2026-10-04');
         expect(screen.getByTestId('tooltip-label')).toHaveTextContent('日付: —');
+        expect(screen.getByTestId('tooltip-value')).toHaveTextContent('73.5 kg（目標体重との差 +9.5 kg）');
         expect(screen.getByTestId('tooltip-label')).toHaveAttribute('data-background-color', 'var(--chart-tooltip-background)');
         expect(screen.getByTestId('tooltip-label')).toHaveAttribute('data-border-color', 'var(--chart-tooltip-border)');
         expect(screen.getByTestId('tooltip-label')).toHaveAttribute('data-text-color', 'var(--chart-tooltip-text)');
