@@ -68,7 +68,7 @@ describe('WeightDashboard', () => {
         expect(screen.queryByText(/Health overview/)).not.toBeInTheDocument();
         expect(screen.queryByText('CSVに記録した体重の変化を確認できます。')).not.toBeInTheDocument();
         expect(screen.getByText('73.5', {selector: 'p'})).toBeInTheDocument();
-        expect(screen.getByText('現在の身長: 171 cm')).toBeInTheDocument();
+        expect(screen.getByLabelText('身長 (cm)')).toHaveValue(171);
         expect(screen.getByText('+5.5 kg')).toBeInTheDocument();
         expect(screen.getAllByText('2026-10-04').length).toBeGreaterThan(0);
         expect(screen.getByTestId('tooltip-label')).toHaveTextContent('日付: 2026-10-04');
@@ -121,7 +121,7 @@ describe('WeightDashboard', () => {
         expect(screen.getByText('25.1', {selector: 'p'})).toBeInTheDocument();
         fireEvent.change(screen.getByLabelText('身長 (cm)'), {target: {value: '172'}});
 
-        expect(screen.getByText('現在の身長: 172 cm')).toBeInTheDocument();
+        expect(screen.getByLabelText('身長 (cm)')).toHaveValue(172);
         expect(screen.getByText('24.8', {selector: 'p'})).toBeInTheDocument();
         expect(screen.queryByRole('button', {name: '更新'})).not.toBeInTheDocument();
 
@@ -137,7 +137,8 @@ describe('WeightDashboard', () => {
         fireEvent.change(screen.getByLabelText('身長 (cm)'), {target: {value: '0'}});
 
         expect(screen.getByRole('alert')).toHaveTextContent('身長は0より大きく300 cm以下');
-        expect(screen.getByText('現在の身長: 171 cm')).toBeInTheDocument();
+        expect(screen.getByLabelText('身長 (cm)')).toHaveValue(0);
+        expect(screen.getByText('25.1', {selector: 'p'})).toBeInTheDocument();
     });
 
     it('目標体重を下回る差分にはプラス符号を付けない', () => {

@@ -274,7 +274,6 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                             {heightMessage}
                         </p>
                     )}
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">現在の身長: {heightCm} cm</p>
                 </article>
                 <article
                     className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
