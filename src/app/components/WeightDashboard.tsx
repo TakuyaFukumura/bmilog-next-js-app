@@ -68,6 +68,10 @@ function formatWeightDifference(difference: number | null): string {
     return difference > 0 ? `+${formattedDifference} kg` : `${formattedDifference} kg`;
 }
 
+function isValidHeight(value: number): boolean {
+    return Number.isFinite(value) && value > 0 && value <= 300 && Number.isInteger(value * 10);
+}
+
 function WeightChartDot({
     payload,
     cx,
@@ -158,9 +162,12 @@ function DataError({data}: Readonly<{ data: Exclude<DashboardDataResult, { statu
 
 export default function WeightDashboard({data, today}: WeightDashboardProps) {
     const [period, setPeriod] = useState<Period>('all');
+    const [heightCm, setHeightCm] = useState(data.status === 'ok' ? data.profile.heightCm : 0);
+    const [heightInput, setHeightInput] = useState(data.status === 'ok' ? String(data.profile.heightCm) : '');
+    const [heightMessage, setHeightMessage] = useState<string | null>(null);
     const allRecords = useMemo(
-        () => data.status === 'ok' ? getBmiRecords(data.records, data.profile) : [],
-        [data],
+        () => data.status === 'ok' ? getBmiRecords(data.records, {...data.profile, heightCm}) : [],
+        [data, heightCm],
     );
     const [selectedDate, setSelectedDate] = useState(
         data.status === 'ok' ? data.records.at(-1)?.date ?? null : null,
@@ -178,7 +185,7 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
     const latestRecord = allRecords.at(-1) ?? null;
     const difference = latestRecord ? latestRecord.weightKg - data.profile.targetWeightKg : null;
     const differenceLabel = formatWeightDifference(difference);
-    const standardRange = getStandardWeightRange(data.profile.heightCm);
+    const standardRange = getStandardWeightRange(heightCm);
     const weights = [
         ...visibleRecords.map(record => record.weightKg),
         data.profile.targetWeightKg,
@@ -239,7 +246,35 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                             <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{latestRecord.bmiCategory}</p>
                         </>
                     ) : <p className="mt-2 text-lg font-semibold">—</p>}
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">身長 {data.profile.heightCm} cm</p>
+                    <label className="mt-3 block text-sm text-gray-600 dark:text-gray-300">
+                        身長 (cm)
+                        <input
+                            aria-label="身長 (cm)"
+                            className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            max="300"
+                            min="0.1"
+                            onChange={event => {
+                                const nextInput = event.target.value;
+                                const nextHeight = Number(nextInput);
+                                setHeightInput(nextInput);
+                                if (!nextInput || !isValidHeight(nextHeight)) {
+                                    setHeightMessage('身長は0より大きく300 cm以下、小数第1位まで入力してください。');
+                                    return;
+                                }
+                                setHeightCm(nextHeight);
+                                setHeightMessage(null);
+                            }}
+                            step="0.1"
+                            type="number"
+                            value={heightInput}
+                        />
+                    </label>
+                    {heightMessage && (
+                        <p className="mt-2 text-sm" role="alert">
+                            {heightMessage}
+                        </p>
+                    )}
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">現在の身長: {heightCm} cm</p>
                 </article>
                 <article
                     className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
