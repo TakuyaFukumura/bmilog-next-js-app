@@ -18,7 +18,7 @@ export type CsvIssue = {
     reason: string;
 };
 
-type ParsedRecord = {record: string[]; info: {lines: number}};
+type ParsedRecord = { record: string[]; info: { lines: number } };
 
 const WEIGHT_FILE = 'data/weight-sample.csv';
 const PROFILE_FILE = 'data/profile-sample.csv';
@@ -28,7 +28,7 @@ export function getTodayInTokyo(now = new Date()): string {
     return now.toLocaleDateString('sv-SE', {timeZone: 'Asia/Tokyo'});
 }
 
-function parseRows(contents: string, file: string): {rows: ParsedRecord[]; issues: CsvIssue[]} {
+function parseRows(contents: string, file: string): { rows: ParsedRecord[]; issues: CsvIssue[] } {
     try {
         const rows = parse(contents, {
             bom: true,
@@ -43,7 +43,7 @@ function parseRows(contents: string, file: string): {rows: ParsedRecord[]; issue
         return {rows, issues: []};
     } catch (error) {
         const line = typeof error === 'object' && error !== null && 'lines' in error &&
-            typeof error.lines === 'number' ? error.lines : 1;
+        typeof error.lines === 'number' ? error.lines : 1;
         return {
             rows: [],
             issues: [{file, line, reason: 'CSVの形式を解析できません'}],
@@ -138,7 +138,7 @@ export function parseWeightCsv(contents: string, today = getTodayInTokyo()): {
     return {records: validationIssues.length ? [] : records, issues: validationIssues};
 }
 
-export function parseProfileCsv(contents: string): {profile: Profile | null; issues: CsvIssue[]} {
+export function parseProfileCsv(contents: string): { profile: Profile | null; issues: CsvIssue[] } {
     const file = PROFILE_FILE;
     const {rows, issues} = parseRows(contents, file);
     if (issues.length > 0) {
@@ -174,11 +174,19 @@ export function parseProfileCsv(contents: string): {profile: Profile | null; iss
 
     const height = parsePositiveNumber(columns[0]);
     if (height === null || height > 300 || !Number.isInteger(height * 10)) {
-        validationIssues.push({file, line: info.lines, reason: '身長は0より大きく300 cm以下、小数第1位までにしてください'});
+        validationIssues.push({
+            file,
+            line: info.lines,
+            reason: '身長は0より大きく300 cm以下、小数第1位までにしてください'
+        });
     }
     const targetWeight = parsePositiveNumber(columns[1]);
     if (targetWeight === null || targetWeight > 999 || !Number.isInteger(targetWeight * 10)) {
-        validationIssues.push({file, line: info.lines, reason: '目標体重は0より大きく999 kg以下、0.1 kg刻みにしてください'});
+        validationIssues.push({
+            file,
+            line: info.lines,
+            reason: '目標体重は0より大きく999 kg以下、0.1 kg刻みにしてください'
+        });
     }
     if (validationIssues.length > 0 || height === null || targetWeight === null) {
         return {profile: null, issues: validationIssues};
@@ -190,9 +198,9 @@ export function parseProfileCsv(contents: string): {profile: Profile | null; iss
 }
 
 export type DashboardDataResult =
-    | {status: 'ok'; records: WeightRecord[]; profile: Profile}
-    | {status: 'invalid'; issues: CsvIssue[]}
-    | {status: 'unreadable'; files: string[]};
+    | { status: 'ok'; records: WeightRecord[]; profile: Profile }
+    | { status: 'invalid'; issues: CsvIssue[] }
+    | { status: 'unreadable'; files: string[] };
 
 export async function loadDashboardData(today = getTodayInTokyo()): Promise<DashboardDataResult> {
     const [weightContents, profileContents] = await Promise.all([
