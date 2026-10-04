@@ -215,10 +215,7 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
     return (
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <div className="mb-8">
-                <p className="text-sm font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">Health
-                    overview</p>
                 <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">体重とBMIの記録</h1>
-                <p className="mt-2 text-gray-600 dark:text-gray-300">CSVに記録した体重の変化を確認できます。</p>
             </div>
 
             <section aria-label="最新の記録" className="mb-8 grid gap-4 sm:grid-cols-3">
