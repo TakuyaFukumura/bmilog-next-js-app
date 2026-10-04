@@ -55,8 +55,31 @@ describe('parseWeightCsv', () => {
             expect.objectContaining({line: 3, reason: '同じ日付の記録が重複しています'}),
             expect.objectContaining({line: 4, reason: 'JST基準で未来の日付は登録できません'}),
             expect.objectContaining({line: 5, reason: '日付は実在する YYYY-MM-DD 形式にしてください'}),
-            expect.objectContaining({line: 5, reason: '体重は0より大きく999 kg以下の数値にしてください'}),
+            expect.objectContaining({line: 5, reason: '体重は1 kg以上999 kg以下の数値にしてください'}),
         ]));
+    });
+
+    it('1 kg未満を拒否し、最小値の1 kgを受け入れる', () => {
+        const belowMinimum = parseWeightCsv(
+            'date,weight_kg\n2026-10-01,0.01\n2026-10-02,0.99\n',
+            '2026-10-04',
+        );
+        expect(belowMinimum.records).toEqual([]);
+        expect(belowMinimum.issues).toEqual(expect.arrayContaining([
+            expect.objectContaining({
+                line: 2,
+                reason: '体重は1 kg以上999 kg以下の数値にしてください',
+            }),
+            expect.objectContaining({
+                line: 3,
+                reason: '体重は1 kg以上999 kg以下の数値にしてください',
+            }),
+        ]));
+
+        expect(parseWeightCsv('date,weight_kg\n2026-10-01,1\n', '2026-10-04')).toEqual({
+            records: [{date: '2026-10-01', weightKg: 1}],
+            issues: [],
+        });
     });
 
     it('ヘッダーの列名と順序を検証する', () => {
@@ -76,5 +99,18 @@ describe('parseProfileCsv', () => {
         const invalid = parseProfileCsv('height_cm,target_weight_kg\n301,68.05\n');
         expect(invalid.profile).toBeNull();
         expect(invalid.issues).toHaveLength(2);
+
+        const belowMinimum = parseProfileCsv('height_cm,target_weight_kg\n170,0.9\n');
+        expect(belowMinimum.profile).toBeNull();
+        expect(belowMinimum.issues).toEqual([
+            expect.objectContaining({
+                line: 2,
+                reason: '目標体重は1 kg以上999 kg以下、0.1 kg刻みにしてください',
+            }),
+        ]);
+        expect(parseProfileCsv('height_cm,target_weight_kg\n170,1.0\n')).toEqual({
+            profile: {heightCm: 170, targetWeightKg: 1},
+            issues: [],
+        });
     });
 });

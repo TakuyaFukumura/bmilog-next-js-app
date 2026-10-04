@@ -71,6 +71,14 @@ describe('WeightDashboard', () => {
         keyboardPoint.focus();
         fireEvent.keyDown(keyboardPoint, {key: 'Enter'});
         expect(within(detail as HTMLElement).getByText('2026-09-22')).toBeInTheDocument();
+
+        fireEvent.keyDown(keyboardPoint, {key: 'ArrowRight'});
+        const latestPoint = screen.getAllByRole('button', {name: /2026-10-04/})
+            .find(element => element.tagName.toLowerCase() === 'circle');
+        expect(latestPoint).toHaveFocus();
+        expect(latestPoint).toHaveAttribute('tabindex', '0');
+        expect(keyboardPoint).toHaveAttribute('tabindex', '-1');
+        expect(within(detail as HTMLElement).getByText('2026-10-04')).toBeInTheDocument();
     });
 
     it('CSV検証エラーは行番号と理由を表示する', () => {
@@ -114,8 +122,11 @@ describe('WeightDashboard', () => {
         };
         render(<WeightDashboard data={data} today="2026-10-04"/>);
 
-        expect(screen.getAllByRole('button').filter(element => element.tagName.toLowerCase() === 'circle'))
-            .toHaveLength(1000);
+        const chartPoints = screen.getAllByRole('button')
+            .filter(element => element.tagName.toLowerCase() === 'circle');
+        expect(chartPoints).toHaveLength(1000);
+        expect(chartPoints.filter(element => element.getAttribute('tabindex') === '0')).toHaveLength(1);
+        expect(chartPoints.filter(element => element.getAttribute('tabindex') === '-1')).toHaveLength(999);
     });
 
     it('空の記録と読み込み失敗を区別する', () => {
