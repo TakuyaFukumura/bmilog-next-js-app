@@ -1,7 +1,7 @@
 'use client';
 
 import {useMemo, useRef, useState} from 'react';
-import type {Dispatch, RefObject, SetStateAction, SVGProps} from 'react';
+import type {Dispatch, SetStateAction, SVGProps} from 'react';
 import {
     CartesianGrid,
     Line,
@@ -34,7 +34,7 @@ type WeightChartDotProps = Readonly<SVGProps<SVGCircleElement> & {
     selectedDate: string | null;
     visibleRecords: BmiRecord[];
     setSelectedDate: Dispatch<SetStateAction<string | null>>;
-    chartPointRefs: RefObject<Map<string, SVGCircleElement>>;
+    focusChartPoint: (date: string) => void;
 }>;
 
 function isBmiRecord(value: unknown): value is BmiRecord {
@@ -80,7 +80,7 @@ function WeightChartDot({
     selectedDate,
     visibleRecords,
     setSelectedDate,
-    chartPointRefs,
+    focusChartPoint,
 }: WeightChartDotProps) {
     const record = isBmiRecord(payload) ? payload : null;
     if (!record || typeof cx !== 'number' || typeof cy !== 'number') {
@@ -97,14 +97,8 @@ function WeightChartDot({
             strokeWidth={2}
             role="button"
             tabIndex={selectedDate === record.date ? 0 : -1}
+            data-record-date={record.date}
             aria-label={`${record.date} ${formatOneDecimal(record.weightKg)} kg、BMI ${formatOneDecimal(record.bmi)}`}
-            ref={element => {
-                if (element) {
-                    chartPointRefs.current.set(record.date, element);
-                } else {
-                    chartPointRefs.current.delete(record.date);
-                }
-            }}
             onClick={() => setSelectedDate(record.date)}
             onKeyDown={event => {
                 if (event.key === 'Enter' || event.key === ' ') {
@@ -121,7 +115,7 @@ function WeightChartDot({
                     const nextRecord = visibleRecords[currentIndex + direction];
                     if (nextRecord) {
                         setSelectedDate(nextRecord.date);
-                        chartPointRefs.current.get(nextRecord.date)?.focus();
+                        focusChartPoint(nextRecord.date);
                     }
                 }
             }}
@@ -174,7 +168,7 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
         data.status === 'ok' ? data.records.at(-1)?.date ?? null : null,
     );
     const [tablePage, setTablePage] = useState(0);
-    const chartPointRefs = useRef<Map<string, SVGCircleElement>>(new Map());
+    const chartContainerRef = useRef<HTMLDivElement>(null);
 
     if (data.status !== 'ok') {
         return <DataError data={data}/>;
@@ -218,6 +212,11 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
         if (isBmiRecord(record)) {
             setSelectedDate(record.date);
         }
+    };
+
+    const focusChartPoint = (date: string) => {
+        const points = chartContainerRef.current?.querySelectorAll<SVGCircleElement>('[data-record-date]');
+        Array.from(points ?? []).find(point => point.dataset.recordDate === date)?.focus();
     };
 
     return (
@@ -314,7 +313,8 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                     </div>
                 </div>
 
-                <div className="mt-6 h-72 w-full sm:h-96" aria-label="日付ごとの体重推移グラフ">
+                <div ref={chartContainerRef} className="mt-6 h-72 w-full sm:h-96"
+                     aria-label="日付ごとの体重推移グラフ">
                     <ResponsiveContainer width="100%" height="100%">
                         <LineChart
                             data={visibleRecords}
@@ -407,14 +407,14 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                         selectedDate={selectedRecord?.date ?? null}
                                         visibleRecords={visibleRecords}
                                         setSelectedDate={setSelectedDate}
-                                        chartPointRefs={chartPointRefs}
+                                        focusChartPoint={focusChartPoint}
                                     />
                                 )}
                                 dot={<WeightChartDot
                                     selectedDate={selectedRecord?.date ?? null}
                                     visibleRecords={visibleRecords}
                                     setSelectedDate={setSelectedDate}
-                                    chartPointRefs={chartPointRefs}
+                                    focusChartPoint={focusChartPoint}
                                 />}
                             />
                         </LineChart>
