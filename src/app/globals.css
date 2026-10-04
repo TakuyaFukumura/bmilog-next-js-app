@@ -20,6 +20,9 @@ body {
     --chart-target: #c2410c;
     --chart-band: #0f766e;
     --chart-point-outline: #ffffff;
+    --chart-tooltip-background: #ffffff;
+    --chart-tooltip-text: #111827;
+    --chart-tooltip-border: #9ca3af;
 }
 
 .dark {
@@ -29,6 +32,9 @@ body {
     --chart-target: #fdba74;
     --chart-band: #5eead4;
     --chart-point-outline: #1f2937;
+    --chart-tooltip-background: #111827;
+    --chart-tooltip-text: #f9fafb;
+    --chart-tooltip-border: #6b7280;
 }
 
 :focus-visible {

@@ -68,10 +68,15 @@ function formatWeightDifference(difference: number | null): string {
     return difference > 0 ? `+${formattedDifference} kg` : `${formattedDifference} kg`;
 }
 
+function isValidHeight(value: number): boolean {
+    return Number.isFinite(value) && value > 0 && value <= 300 && Number.isInteger(value * 10);
+}
+
 function WeightChartDot({
     payload,
     cx,
     cy,
+    r = 5,
     selectedDate,
     visibleRecords,
     setSelectedDate,
@@ -86,7 +91,7 @@ function WeightChartDot({
         <circle
             cx={cx}
             cy={cy}
-            r={5}
+            r={r}
             fill="var(--chart-series)"
             stroke="var(--chart-point-outline)"
             strokeWidth={2}
@@ -158,9 +163,12 @@ function DataError({data}: Readonly<{ data: Exclude<DashboardDataResult, { statu
 
 export default function WeightDashboard({data, today}: WeightDashboardProps) {
     const [period, setPeriod] = useState<Period>('all');
+    const [heightCm, setHeightCm] = useState(data.status === 'ok' ? data.profile.heightCm : 0);
+    const [heightInput, setHeightInput] = useState(data.status === 'ok' ? String(data.profile.heightCm) : '');
+    const [heightMessage, setHeightMessage] = useState<string | null>(null);
     const allRecords = useMemo(
-        () => data.status === 'ok' ? getBmiRecords(data.records, data.profile) : [],
-        [data],
+        () => data.status === 'ok' ? getBmiRecords(data.records, {...data.profile, heightCm}) : [],
+        [data, heightCm],
     );
     const [selectedDate, setSelectedDate] = useState(
         data.status === 'ok' ? data.records.at(-1)?.date ?? null : null,
@@ -178,7 +186,7 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
     const latestRecord = allRecords.at(-1) ?? null;
     const difference = latestRecord ? latestRecord.weightKg - data.profile.targetWeightKg : null;
     const differenceLabel = formatWeightDifference(difference);
-    const standardRange = getStandardWeightRange(data.profile.heightCm);
+    const standardRange = getStandardWeightRange(heightCm);
     const weights = [
         ...visibleRecords.map(record => record.weightKg),
         data.profile.targetWeightKg,
@@ -215,10 +223,7 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
     return (
         <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
             <div className="mb-8">
-                <p className="text-sm font-semibold uppercase tracking-wide text-teal-700 dark:text-teal-300">Health
-                    overview</p>
                 <h1 className="mt-2 text-3xl font-bold tracking-tight text-gray-900 dark:text-white">体重とBMIの記録</h1>
-                <p className="mt-2 text-gray-600 dark:text-gray-300">CSVに記録した体重の変化を確認できます。</p>
             </div>
 
             <section aria-label="最新の記録" className="mb-8 grid gap-4 sm:grid-cols-3">
@@ -242,6 +247,34 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                             <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">{latestRecord.bmiCategory}</p>
                         </>
                     ) : <p className="mt-2 text-lg font-semibold">—</p>}
+                    <label className="mt-3 block text-sm text-gray-600 dark:text-gray-300">
+                        身長 (cm)
+                        <input
+                            aria-label="身長 (cm)"
+                            className="mt-1 w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            max="300"
+                            min="0.1"
+                            onChange={event => {
+                                const nextInput = event.target.value;
+                                const nextHeight = Number(nextInput);
+                                setHeightInput(nextInput);
+                                if (!nextInput || !isValidHeight(nextHeight)) {
+                                    setHeightMessage('身長は0より大きく300 cm以下、小数第1位まで入力してください。');
+                                    return;
+                                }
+                                setHeightCm(nextHeight);
+                                setHeightMessage(null);
+                            }}
+                            step="0.1"
+                            type="number"
+                            value={heightInput}
+                        />
+                    </label>
+                    {heightMessage && (
+                        <p className="mt-2 text-sm" role="alert">
+                            {heightMessage}
+                        </p>
+                    )}
                 </article>
                 <article
                     className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
@@ -269,7 +302,11 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                 type="button"
                                 aria-pressed={period === option.value}
                                 onClick={() => handlePeriodChange(option.value)}
-                                className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 dark:border-gray-600 dark:hover:bg-gray-700"
+                                className={`rounded-lg border px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 ${
+                                    period === option.value
+                                        ? 'border-teal-700 bg-teal-700 text-white hover:bg-teal-800 dark:border-teal-400 dark:bg-teal-600 dark:hover:bg-teal-500'
+                                        : 'border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
+                                }`}
                             >
                                 {option.label}
                             </button>
@@ -294,8 +331,30 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                 width={64}
                             />
                             <Tooltip
-                                formatter={(value, name) => [typeof value === 'number' ? `${formatOneDecimal(value)} kg` : value, name]}
+                                contentStyle={{
+                                    backgroundColor: 'var(--chart-tooltip-background)',
+                                    borderColor: 'var(--chart-tooltip-border)',
+                                    color: 'var(--chart-tooltip-text)',
+                                }}
+                                formatter={(value, name, item) => {
+                                    const formattedValue = typeof value === 'number'
+                                        ? `${formatOneDecimal(value)} kg`
+                                        : value;
+                                    const record = isBmiRecord(item.payload) ? item.payload : null;
+                                    if (!record) {
+                                        return [formattedValue, name];
+                                    }
+                                    const targetDifference = formatWeightDifference(
+                                        record.weightKg - data.profile.targetWeightKg,
+                                    );
+                                    return [
+                                        `${formattedValue}（${targetDifference}）`,
+                                        name,
+                                    ];
+                                }}
+                                itemStyle={{color: 'var(--chart-tooltip-text)'}}
                                 labelFormatter={tooltipDateLabel}
+                                labelStyle={{color: 'var(--chart-tooltip-text)'}}
                             />
                             {visibleRecords.length > 0 && (
                                 <ReferenceArea
@@ -339,7 +398,18 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                 name="体重"
                                 stroke="var(--chart-series)"
                                 strokeWidth={3}
-                                activeDot={{r: 8}}
+                                activeDot={props => (
+                                    <WeightChartDot
+                                        payload={props.payload}
+                                        cx={props.cx}
+                                        cy={props.cy}
+                                        r={8}
+                                        selectedDate={selectedRecord?.date ?? null}
+                                        visibleRecords={visibleRecords}
+                                        setSelectedDate={setSelectedDate}
+                                        chartPointRefs={chartPointRefs}
+                                    />
+                                )}
                                 dot={<WeightChartDot
                                     selectedDate={selectedRecord?.date ?? null}
                                     visibleRecords={visibleRecords}
@@ -354,7 +424,7 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                 <div className="mt-4 rounded-xl bg-gray-50 p-4 dark:bg-gray-900/60" aria-live="polite">
                     <h3 className="font-semibold">選択中の記録</h3>
                     {selectedRecord ? (
-                        <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-3">
+                        <dl className="mt-2 grid gap-2 text-sm sm:grid-cols-4">
                             <div>
                                 <dt className="text-gray-600 dark:text-gray-300">日付</dt>
                                 <dd className="font-medium">{selectedRecord.date}</dd>
@@ -366,6 +436,12 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                             <div>
                                 <dt className="text-gray-600 dark:text-gray-300">BMI</dt>
                                 <dd className="font-medium">{formatOneDecimal(selectedRecord.bmi)}（{selectedRecord.bmiCategory}）</dd>
+                            </div>
+                            <div>
+                                <dt className="text-gray-600 dark:text-gray-300">目標体重との差</dt>
+                                <dd className="font-medium">
+                                    {formatWeightDifference(selectedRecord.weightKg - data.profile.targetWeightKg)}
+                                </dd>
                             </div>
                         </dl>
                     ) : <p className="mt-2 text-sm text-gray-600 dark:text-gray-300">記録がありません</p>}
