@@ -4,23 +4,36 @@ import type {DashboardDataResult} from '../../../../src/lib/health-data';
 
 jest.mock('recharts', () => {
     const passthrough = ({children}: { children?: import('react').ReactNode }) => <div>{children}</div>;
+    const {cloneElement} = jest.requireActual<typeof import('react')>('react');
     return {
         CartesianGrid: () => null,
         Line: ({data, dot}: {
             data?: { date: string; weightKg: number; bmi: number; bmiCategory: string }[];
-            dot?: (props: { payload: unknown; cx: number; cy: number }) => import('react').ReactNode;
+            dot?: ((props: { payload: unknown; cx: number; cy: number }) => import('react').ReactNode)
+                | import('react').ReactElement<{ payload?: unknown; cx?: number; cy?: number }>;
         }) => (
             <svg>
-                {data?.map(record => (
-                    <g key={record.date}>{dot?.({payload: record, cx: 10, cy: 10})}</g>
-                ))}
+                {data?.map(record => {
+                    const point = {payload: record, cx: 10, cy: 10};
+                    const renderedDot = typeof dot === 'function'
+                        ? dot(point)
+                        : dot ? cloneElement(dot, point) : null;
+                    return <g key={record.date}>{renderedDot}</g>;
+                })}
             </svg>
         ),
         LineChart: passthrough,
         ReferenceArea: () => null,
         ReferenceLine: () => null,
         ResponsiveContainer: passthrough,
-        Tooltip: () => null,
+        Tooltip: ({labelFormatter}: {
+            labelFormatter?: (label: import('react').ReactNode) => import('react').ReactNode;
+        }) => (
+            <div data-testid="tooltip-label">
+                {labelFormatter?.('2026-10-04')}
+                {labelFormatter?.(<span>未対応のラベル形式</span>)}
+            </div>
+        ),
         XAxis: () => null,
         YAxis: () => null,
     };
@@ -43,6 +56,8 @@ describe('WeightDashboard', () => {
         expect(screen.getByText('73.5', {selector: 'p'})).toBeInTheDocument();
         expect(screen.getByText('+5.5 kg')).toBeInTheDocument();
         expect(screen.getAllByText('2026-10-04').length).toBeGreaterThan(0);
+        expect(screen.getByTestId('tooltip-label')).toHaveTextContent('日付: 2026-10-04');
+        expect(screen.getByTestId('tooltip-label')).toHaveTextContent('日付: —');
 
         fireEvent.click(screen.getByRole('button', {name: '1か月'}));
         expect(screen.getByRole('button', {name: '1か月'})).toHaveAttribute('aria-pressed', 'true');
@@ -79,6 +94,17 @@ describe('WeightDashboard', () => {
         expect(latestPoint).toHaveAttribute('tabindex', '0');
         expect(keyboardPoint).toHaveAttribute('tabindex', '-1');
         expect(within(detail as HTMLElement).getByText('2026-10-04')).toBeInTheDocument();
+    });
+
+    it('目標体重を下回る差分にはプラス符号を付けない', () => {
+        const belowTarget: DashboardDataResult = {
+            status: 'ok',
+            profile: {heightCm: 170, targetWeightKg: 68},
+            records: [{date: '2026-10-04', weightKg: 65}],
+        };
+        render(<WeightDashboard data={belowTarget} today="2026-10-04"/>);
+
+        expect(screen.getByText('-3.0 kg')).toBeInTheDocument();
     });
 
     it('CSV検証エラーは行番号と理由を表示する', () => {
