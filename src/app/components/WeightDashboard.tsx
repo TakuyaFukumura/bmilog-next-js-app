@@ -327,8 +327,15 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                 width={64}
                             />
                             <Tooltip
+                                contentStyle={{
+                                    backgroundColor: 'var(--chart-tooltip-background)',
+                                    borderColor: 'var(--chart-tooltip-border)',
+                                    color: 'var(--chart-tooltip-text)',
+                                }}
                                 formatter={(value, name) => [typeof value === 'number' ? `${formatOneDecimal(value)} kg` : value, name]}
+                                itemStyle={{color: 'var(--chart-tooltip-text)'}}
                                 labelFormatter={tooltipDateLabel}
+                                labelStyle={{color: 'var(--chart-tooltip-text)'}}
                             />
                             {visibleRecords.length > 0 && (
                                 <ReferenceArea

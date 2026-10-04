@@ -26,12 +26,24 @@ jest.mock('recharts', () => {
         ReferenceArea: () => null,
         ReferenceLine: () => null,
         ResponsiveContainer: passthrough,
-        Tooltip: ({labelFormatter}: {
+        Tooltip: ({contentStyle, itemStyle, labelFormatter, labelStyle}: {
+            contentStyle?: import('react').CSSProperties;
+            itemStyle?: import('react').CSSProperties;
             labelFormatter?: (label: import('react').ReactNode) => import('react').ReactNode;
+            labelStyle?: import('react').CSSProperties;
         }) => (
-            <div data-testid="tooltip-label">
-                {labelFormatter?.('2026-10-04')}
-                {labelFormatter?.(<span>未対応のラベル形式</span>)}
+            <div
+                data-testid="tooltip-label"
+                data-background-color={contentStyle?.backgroundColor}
+                data-border-color={contentStyle?.borderColor}
+                data-text-color={contentStyle?.color}
+            >
+                <span data-testid="tooltip-date" data-text-color={labelStyle?.color}>
+                    {labelFormatter?.('2026-10-04')}
+                </span>
+                <span data-text-color={itemStyle?.color}>
+                    {labelFormatter?.(<span>未対応のラベル形式</span>)}
+                </span>
             </div>
         ),
         XAxis: () => null,
@@ -61,6 +73,10 @@ describe('WeightDashboard', () => {
         expect(screen.getAllByText('2026-10-04').length).toBeGreaterThan(0);
         expect(screen.getByTestId('tooltip-label')).toHaveTextContent('日付: 2026-10-04');
         expect(screen.getByTestId('tooltip-label')).toHaveTextContent('日付: —');
+        expect(screen.getByTestId('tooltip-label')).toHaveAttribute('data-background-color', 'var(--chart-tooltip-background)');
+        expect(screen.getByTestId('tooltip-label')).toHaveAttribute('data-border-color', 'var(--chart-tooltip-border)');
+        expect(screen.getByTestId('tooltip-label')).toHaveAttribute('data-text-color', 'var(--chart-tooltip-text)');
+        expect(screen.getByTestId('tooltip-date')).toHaveAttribute('data-text-color', 'var(--chart-tooltip-text)');
 
         fireEvent.click(screen.getByRole('button', {name: '1か月'}));
         expect(screen.getByRole('button', {name: '1か月'})).toHaveAttribute('aria-pressed', 'true');
