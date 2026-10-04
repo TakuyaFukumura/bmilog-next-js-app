@@ -122,8 +122,8 @@ export function parseWeightCsv(contents: string, today = getTodayInTokyo()): {
         }
 
         const weight = parsePositiveNumber(weightText);
-        if (weight === null || weight > 999) {
-            validationIssues.push({file, line, reason: '体重は0より大きく999 kg以下の数値にしてください'});
+        if (weight === null || weight < 1 || weight > 999) {
+            validationIssues.push({file, line, reason: '体重は1 kg以上999 kg以下の数値にしてください'});
             valid = false;
         }
         if (valid && weight !== null) {
@@ -181,11 +181,11 @@ export function parseProfileCsv(contents: string): { profile: Profile | null; is
         });
     }
     const targetWeight = parsePositiveNumber(columns[1]);
-    if (targetWeight === null || targetWeight > 999 || !Number.isInteger(targetWeight * 10)) {
+    if (targetWeight === null || targetWeight < 1 || targetWeight > 999 || !Number.isInteger(targetWeight * 10)) {
         validationIssues.push({
             file,
             line: info.lines,
-            reason: '目標体重は0より大きく999 kg以下、0.1 kg刻みにしてください'
+            reason: '目標体重は1 kg以上999 kg以下、0.1 kg刻みにしてください'
         });
     }
     if (validationIssues.length > 0 || height === null || targetWeight === null) {

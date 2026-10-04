@@ -1,6 +1,6 @@
 'use client';
 
-import {useMemo, useState} from 'react';
+import {useMemo, useRef, useState} from 'react';
 import {
     CartesianGrid,
     Line,
@@ -86,6 +86,7 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
         data.status === 'ok' ? data.records.at(-1)?.date ?? null : null,
     );
     const [tablePage, setTablePage] = useState(0);
+    const chartPointRefs = useRef<Map<string, SVGCircleElement>>(new Map());
 
     if (data.status !== 'ok') {
         return <DataError data={data}/>;
@@ -176,7 +177,9 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                 <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <h2 className="text-xl font-semibold">体重の推移</h2>
-                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">点を選択すると記録の詳細を確認できます。</p>
+                        <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                            点を選択すると記録の詳細を確認できます。キーボードでは左右矢印キーで記録点を移動できます。
+                        </p>
                     </div>
                     <div className="flex flex-wrap gap-2" aria-label="表示期間">
                         {periodOptions.map(option => (
@@ -270,13 +273,33 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                             stroke="var(--chart-point-outline)"
                                             strokeWidth={2}
                                             role="button"
-                                            tabIndex={0}
+                                            tabIndex={selectedRecord?.date === record.date ? 0 : -1}
                                             aria-label={`${record.date} ${formatOneDecimal(record.weightKg)} kg、BMI ${formatOneDecimal(record.bmi)}`}
+                                            ref={element => {
+                                                if (element) {
+                                                    chartPointRefs.current.set(record.date, element);
+                                                } else {
+                                                    chartPointRefs.current.delete(record.date);
+                                                }
+                                            }}
                                             onClick={() => setSelectedDate(record.date)}
                                             onKeyDown={event => {
                                                 if (event.key === 'Enter' || event.key === ' ') {
                                                     event.preventDefault();
                                                     setSelectedDate(record.date);
+                                                    return;
+                                                }
+                                                if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+                                                    event.preventDefault();
+                                                    const direction = event.key === 'ArrowLeft' ? -1 : 1;
+                                                    const currentIndex = visibleRecords.findIndex(
+                                                        item => item.date === record.date,
+                                                    );
+                                                    const nextRecord = visibleRecords[currentIndex + direction];
+                                                    if (nextRecord) {
+                                                        setSelectedDate(nextRecord.date);
+                                                        chartPointRefs.current.get(nextRecord.date)?.focus();
+                                                    }
                                                 }
                                             }}
                                         />
