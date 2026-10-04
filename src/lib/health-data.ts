@@ -52,8 +52,8 @@ function parseRows(contents: string, file: string): { rows: ParsedRecord[]; issu
 }
 
 function hasExpectedHeader(actual: string[] | undefined, expected: string[]): boolean {
-    return Boolean(actual && actual.length === expected.length &&
-        actual.every((column, index) => column === expected[index]));
+    return actual?.length === expected.length &&
+        actual.every((column, index) => column === expected[index]);
 }
 
 function parsePositiveNumber(value: string | undefined): number | null {
@@ -73,6 +73,64 @@ function isValidDate(value: string): boolean {
     return date.getUTCFullYear() === year &&
         date.getUTCMonth() === month - 1 &&
         date.getUTCDate() === day;
+}
+
+function validateWeightDate(
+    date: string,
+    file: string,
+    line: number,
+    today: string,
+    seenDates: Set<string>,
+): CsvIssue[] {
+    const issues: CsvIssue[] = [];
+    if (!date) {
+        issues.push({file, line, reason: '日付が未入力です'});
+    } else if (!isValidDate(date)) {
+        issues.push({file, line, reason: '日付は実在する YYYY-MM-DD 形式にしてください'});
+    } else {
+        if (date > today) {
+            issues.push({file, line, reason: 'JST基準で未来の日付は登録できません'});
+        }
+        if (seenDates.has(date)) {
+            issues.push({file, line, reason: '同じ日付の記録が重複しています'});
+        }
+        seenDates.add(date);
+    }
+    return issues;
+}
+
+function parseWeightRow(
+    row: ParsedRecord,
+    file: string,
+    today: string,
+    seenDates: Set<string>,
+): { record: WeightRecord | null; issues: CsvIssue[] } {
+    const {record: columns, info} = row;
+    const line = info.lines;
+    if (columns.length !== 2) {
+        return {
+            record: null,
+            issues: [{file, line, reason: '列数は2列にしてください'}],
+        };
+    }
+
+    const [date, weightText] = columns;
+    const issues = validateWeightDate(date, file, line, today, seenDates);
+    const weight = parsePositiveNumber(weightText);
+    if (weight === null || weight < 1 || weight > 999) {
+        issues.push({file, line, reason: '体重は1 kg以上999 kg以下の数値にしてください'});
+    }
+    if (issues.length > 0 || weight === null) {
+        return {record: null, issues};
+    }
+
+    return {
+        record: {
+            date,
+            weightKg: Math.round((weight + Number.EPSILON) * 10) / 10,
+        },
+        issues,
+    };
 }
 
 export function parseWeightCsv(contents: string, today = getTodayInTokyo()): {
@@ -95,42 +153,10 @@ export function parseWeightCsv(contents: string, today = getTodayInTokyo()): {
     const seenDates = new Set<string>();
     const validationIssues: CsvIssue[] = [];
     for (const row of rows.slice(1)) {
-        const {record: columns, info} = row;
-        const line = info.lines;
-        if (columns.length !== 2) {
-            validationIssues.push({file, line, reason: '列数は2列にしてください'});
-            continue;
-        }
-        const [date, weightText] = columns;
-        let valid = true;
-        if (!date) {
-            validationIssues.push({file, line, reason: '日付が未入力です'});
-            valid = false;
-        } else if (!isValidDate(date)) {
-            validationIssues.push({file, line, reason: '日付は実在する YYYY-MM-DD 形式にしてください'});
-            valid = false;
-        } else {
-            if (date > today) {
-                validationIssues.push({file, line, reason: 'JST基準で未来の日付は登録できません'});
-                valid = false;
-            }
-            if (seenDates.has(date)) {
-                validationIssues.push({file, line, reason: '同じ日付の記録が重複しています'});
-                valid = false;
-            }
-            seenDates.add(date);
-        }
-
-        const weight = parsePositiveNumber(weightText);
-        if (weight === null || weight < 1 || weight > 999) {
-            validationIssues.push({file, line, reason: '体重は1 kg以上999 kg以下の数値にしてください'});
-            valid = false;
-        }
-        if (valid && weight !== null) {
-            records.push({
-                date,
-                weightKg: Math.round((weight + Number.EPSILON) * 10) / 10,
-            });
+        const result = parseWeightRow(row, file, today, seenDates);
+        validationIssues.push(...result.issues);
+        if (result.record) {
+            records.push(result.record);
         }
     }
 
