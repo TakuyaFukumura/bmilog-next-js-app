@@ -16,11 +16,19 @@ body {
 :root {
     --chart-grid: #d1d5db;
     --chart-text: #374151;
+    --chart-series: #0f766e;
+    --chart-target: #c2410c;
+    --chart-band: #0f766e;
+    --chart-point-outline: #ffffff;
 }
 
 .dark {
     --chart-grid: #4b5563;
     --chart-text: #d1d5db;
+    --chart-series: #5eead4;
+    --chart-target: #fdba74;
+    --chart-band: #5eead4;
+    --chart-point-outline: #1f2937;
 }
 
 :focus-visible {

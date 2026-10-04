@@ -215,24 +215,36 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                     x2={visibleRecords.at(-1)?.date}
                                     y1={standardRange.lower}
                                     y2={standardRange.upper}
-                                    fill="#14b8a6"
-                                    fillOpacity={0.13}
+                                    fill="var(--chart-band)"
+                                    fillOpacity={0.14}
                                     ifOverflow="extendDomain"
-                                    label={{value: 'BMI標準範囲', fill: '#0f766e', fontSize: 12}}
+                                    label={{value: 'BMI標準範囲', fill: 'var(--chart-series)', fontSize: 12}}
                                 />
                             )}
                             <ReferenceLine
+                                y={standardRange.lower}
+                                stroke="var(--chart-band)"
+                                strokeDasharray="2 3"
+                                strokeWidth={2}
+                            />
+                            <ReferenceLine
+                                y={standardRange.upper}
+                                stroke="var(--chart-band)"
+                                strokeDasharray="2 3"
+                                strokeWidth={2}
+                            />
+                            <ReferenceLine
                                 y={data.profile.targetWeightKg}
-                                stroke="#c2410c"
+                                stroke="var(--chart-target)"
                                 strokeDasharray="6 4"
-                                label={{value: '目標体重', fill: '#c2410c', fontSize: 12, position: 'insideTopRight'}}
+                                label={{value: '目標体重', fill: 'var(--chart-target)', fontSize: 12, position: 'insideTopRight'}}
                             />
                             <Line
                                 type="monotone"
                                 data={visibleRecords}
                                 dataKey="weightKg"
                                 name="体重"
-                                stroke="#0f766e"
+                                stroke="var(--chart-series)"
                                 strokeWidth={3}
                                 activeDot={{r: 8}}
                                 dot={(props) => {
@@ -245,8 +257,8 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                             cx={props.cx}
                                             cy={props.cy}
                                             r={5}
-                                            fill="#0f766e"
-                                            stroke="white"
+                                            fill="var(--chart-series)"
+                                            stroke="var(--chart-point-outline)"
                                             strokeWidth={2}
                                             role="button"
                                             tabIndex={0}

@@ -60,9 +60,17 @@ describe('WeightDashboard', () => {
         if (!chartPoint) {
             throw new Error('グラフ上の記録点が見つかりません');
         }
-        chartPoint.focus();
-        fireEvent.keyDown(chartPoint, {key: 'Enter'});
+        fireEvent.click(chartPoint);
         expect(within(detail as HTMLElement).getByText('2026-08-31')).toBeInTheDocument();
+
+        const keyboardPoint = screen.getAllByRole('button', {name: /2026-09-22/})
+            .find(element => element.tagName.toLowerCase() === 'circle');
+        if (!keyboardPoint) {
+            throw new Error('キーボード操作対象のグラフ点が見つかりません');
+        }
+        keyboardPoint.focus();
+        fireEvent.keyDown(keyboardPoint, {key: 'Enter'});
+        expect(within(detail as HTMLElement).getByText('2026-09-22')).toBeInTheDocument();
     });
 
     it('CSV検証エラーは行番号と理由を表示する', () => {
@@ -92,6 +100,22 @@ describe('WeightDashboard', () => {
         fireEvent.click(screen.getByRole('button', {name: '次へ'}));
         expect(screen.getByRole('button', {name: '2026-10-04'})).toBeInTheDocument();
         expect(screen.getByText('2 / 2ページ')).toBeInTheDocument();
+    });
+
+    it('1,000件すべてをグラフの選択可能な点として渡す', () => {
+        const records = Array.from({length: 1000}, (_, index) => ({
+            date: new Date(Date.UTC(2024, 0, 1 + index)).toISOString().slice(0, 10),
+            weightKg: 50 + index / 10,
+        }));
+        const data: DashboardDataResult = {
+            status: 'ok',
+            profile: {heightCm: 170, targetWeightKg: 68},
+            records,
+        };
+        render(<WeightDashboard data={data} today="2026-10-04"/>);
+
+        expect(screen.getAllByRole('button').filter(element => element.tagName.toLowerCase() === 'circle'))
+            .toHaveLength(1000);
     });
 
     it('空の記録と読み込み失敗を区別する', () => {
