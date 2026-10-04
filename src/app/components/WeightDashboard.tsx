@@ -302,7 +302,11 @@ export default function WeightDashboard({data, today}: WeightDashboardProps) {
                                 type="button"
                                 aria-pressed={period === option.value}
                                 onClick={() => handlePeriodChange(option.value)}
-                                className="rounded-lg border border-gray-300 px-3 py-2 text-sm font-medium hover:bg-gray-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 dark:border-gray-600 dark:hover:bg-gray-700"
+                                className={`rounded-lg border px-3 py-2 text-sm font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-teal-700 ${
+                                    period === option.value
+                                        ? 'border-teal-700 bg-teal-700 text-white hover:bg-teal-800 dark:border-teal-400 dark:bg-teal-600 dark:hover:bg-teal-500'
+                                        : 'border-gray-300 text-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700'
+                                }`}
                             >
                                 {option.label}
                             </button>

@@ -87,6 +87,8 @@ describe('WeightDashboard', () => {
 
         fireEvent.click(screen.getByRole('button', {name: '1か月'}));
         expect(screen.getByRole('button', {name: '1か月'})).toHaveAttribute('aria-pressed', 'true');
+        expect(screen.getByRole('button', {name: '1か月'})).toHaveClass('bg-teal-700', 'text-white');
+        expect(screen.getByRole('button', {name: '全期間'})).not.toHaveClass('bg-teal-700');
         expect(screen.queryByRole('button', {name: '2026-08-31'})).not.toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', {name: '2026-09-22'}));
@@ -97,6 +99,8 @@ describe('WeightDashboard', () => {
         expect(within(detail as HTMLElement).getByText('+10.4 kg')).toBeInTheDocument();
 
         fireEvent.click(screen.getByRole('button', {name: '全期間'}));
+        expect(screen.getByRole('button', {name: '全期間'})).toHaveClass('bg-teal-700', 'text-white');
+        expect(screen.getByRole('button', {name: '1か月'})).not.toHaveClass('bg-teal-700');
         const chartPoint = screen.getAllByRole('button', {name: /2026-08-31/})
             .find(element => element.tagName.toLowerCase() === 'circle');
         if (!chartPoint) {
